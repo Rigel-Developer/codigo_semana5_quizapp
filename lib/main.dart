@@ -1,6 +1,6 @@
-import 'dart:math';
-
+import 'package:codigo_semana5_quizapp/quiz_brain.dart';
 import 'package:flutter/material.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 
 void main() {
   runApp(MyApp());
@@ -24,57 +24,83 @@ class QuizPage extends StatefulWidget {
 
 class _QuizPageState extends State<QuizPage> {
   // const QuizPage({super.key});
-  List<Map<String, dynamic>> questions = [
-    {"question": 'Pregunta 1', "answer": true},
-    {"question": 'Pregunta 2', "answer": false},
-    {"question": 'Pregunta 3', "answer": false},
-    {"question": 'Pregunta 4', "answer": true},
-    {"question": '', "answer": false},
-  ];
+
+  QuizBrain quizBrain = QuizBrain();
 
   String btnTrue = 'True';
   String btnFalse = 'False';
   bool enableBtn = true;
-  int questionNumber = 0;
+
   int win = 0;
 
   //Arr of check and cross icons
   List<Icon> scoreKeeper = [];
 
   void checkAnswer(bool type) {
-    if (questionNumber < questions.length - 1) {
-      questions[questionNumber]['answer'] == type
-          ? {
-              scoreKeeper.add(
-                const Icon(
-                  Icons.check,
-                  color: Colors.green,
-                  size: 20.0,
-                ),
-              ),
-              win++
-            }
-          : scoreKeeper.add(
-              const Icon(
-                Icons.close,
-                color: Colors.red,
-                size: 20.0,
-              ),
-            );
-      questionNumber++;
-
-      if (questionNumber == 4) {
-        questions[questionNumber]['question'] = 'Your score! $win';
-        btnTrue = 'Restart';
-        enableBtn = false;
-      }
-    } else {
-      questionNumber = 0;
-      scoreKeeper = [];
-      win = 0;
-      btnTrue = 'True';
-      enableBtn = true;
+    if (quizBrain.isFinished()) {
+      Alert(
+        context: context,
+        type: AlertType.success,
+        title: "Quiz App",
+        desc: "Estas son tus respuestas!",
+        content: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: scoreKeeper,
+          ),
+        ),
+        buttons: [
+          DialogButton(
+            width: 120,
+            onPressed: () => {
+              quizBrain.resetQuestion(),
+              Navigator.pop(context),
+              scoreKeeper.clear(),
+              setState(() {})
+            },
+            child: const Text(
+              "Reiniciar",
+              style: TextStyle(color: Colors.white, fontSize: 20),
+            ),
+          )
+        ],
+      ).show();
     }
+    quizBrain.getQuestionAnswer() == type
+        ? {
+            scoreKeeper.add(
+              const Icon(
+                Icons.check,
+                color: Colors.green,
+                size: 30.0,
+              ),
+            ),
+            win++
+          }
+        : scoreKeeper.add(
+            const Icon(
+              Icons.close,
+              color: Colors.red,
+              size: 30.0,
+            ),
+          );
+
+    quizBrain.nextQuestion();
+    // if (questionNumber < quizBrain.getQuestionLength() - 1) {
+    // if (questionNumber == 4) {
+    //   quizBrain.questions[questionNumber]['question'] = 'Your score! $win';
+    //   btnTrue = 'Restart';
+    //   enableBtn = false;
+    // }
+    // } else {
+    //   quizBrain.resetQuestion();
+    //   scoreKeeper = [];
+    //   win = 0;
+    //   btnTrue = 'True';
+    //   enableBtn = true;
+    // }
     setState(() {});
   }
 
@@ -97,7 +123,7 @@ class _QuizPageState extends State<QuizPage> {
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
-                  questions[questionNumber]['question'],
+                  quizBrain.getQuestionText(),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 25.0,
@@ -115,7 +141,7 @@ class _QuizPageState extends State<QuizPage> {
                 color: Colors.green,
                 child: Text(
                   btnTrue,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 20.0,
                     fontWeight: FontWeight.bold,
                   ),
@@ -127,11 +153,11 @@ class _QuizPageState extends State<QuizPage> {
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: MaterialButton(
-                onPressed: enableBtn ? () => checkAnswer(false) : null,
+                onPressed: () => checkAnswer(false),
                 color: Colors.redAccent,
                 child: Text(
                   btnFalse,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 20.0,
                     fontWeight: FontWeight.bold,
                   ),
@@ -139,10 +165,10 @@ class _QuizPageState extends State<QuizPage> {
               ),
             ),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: scoreKeeper,
-          )
+          // Row(
+          //   mainAxisAlignment: MainAxisAlignment.center,
+          //   children: scoreKeeper,
+          // )
         ],
       ),
     );
